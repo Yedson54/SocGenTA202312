@@ -5,7 +5,6 @@ from typing import List, Tuple, Dict
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import missingno as msno
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 warnings.filterwarnings('ignore')
@@ -91,7 +90,7 @@ def entropy(column_series: pd.Series, normalize: bool=False) -> float:
     Returns:
         float: entropy of the series
     """
-    n_classes = len(column_series)
+    n_classes = column_series.nunique()
     if n_classes <= 1:
         return 0 
     
@@ -111,7 +110,7 @@ def compute_entropies(df: pd.DataFrame, normalize=False):
     return entropies
 
 
-def plot_kde_grid(data, columns, grid_cols=3, hue=None):
+def plot_kde_grid(data, columns, grid_cols=3, hue=None, target=None):
     """
     Plot KDE plots for specified columns in a grid.
 
@@ -125,19 +124,19 @@ def plot_kde_grid(data, columns, grid_cols=3, hue=None):
     - None (displays the grid of KDE plots)
     """
     # Calculate the number of rows needed in the grid
-    print("len columns", len(columns))
-    grid_rows, reminder = divmod(len(columns) - (1-(not hue)), grid_cols)
-    print("reminder", reminder)
+    if isinstance(columns, (pd.Index, list)):
+        columns = list(columns)
+    if target and target in columns:
+        columns.remove(target)
+    grid_rows, reminder = divmod(len(columns) - (1 - (not hue)), grid_cols)
     grid_rows += (reminder > 0)  # assess if there remain some columns
-    # grid_rows = int(np.floor(len(columns) / grid_cols)) + 
-    print(grid_rows)
 
     # Create a grid of subplots
     fig, axes = plt.subplots(grid_rows, grid_cols, figsize=(5 * grid_cols, 4 * grid_rows))
     axes = axes.flatten()
 
     # Loop through each column and plot KDE
-    for i, column in enumerate(columns.drop(target)):
+    for i, column in enumerate(columns):
         ax = axes[i]
         if not hue:
             sns.kdeplot(data[column], ax=ax, fill=True)
@@ -213,10 +212,18 @@ def test_distribution_difference_all(data: pd.DataFrame, target_variable: str, f
     Returns:
     - result_dict: Dictionary containing test statistics and p-values for each feature variable
     """
-    result_dict = {
-        feature: test_distribution_difference(data, target_variable, feature) if data[feature].dtype == ("O", "S") else
-        test_distribution_difference_categorical(data, target_variable, feature) for feature in feature_variables.drop(target_variable)
-    }
+    result_dict = {}
+    for feature in feature_variables:
+        if feature == target_variable:
+            continue
+        if pd.api.types.is_numeric_dtype(data[feature]):
+            result_dict[feature] = test_distribution_difference(
+                data, target_variable, feature
+            )
+        else:
+            result_dict[feature] = test_distribution_difference_categorical(
+                data, target_variable, feature
+            )
 
     # for feature in feature_variables:
     #     if data[feature].dtype == 'O':
