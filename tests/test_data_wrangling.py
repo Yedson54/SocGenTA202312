@@ -1,13 +1,12 @@
 import pandas as pd
-import numpy as np
 import pytest
 
-from src.data_wrangling import (
+from energy_predictor.data_wrangling import (
     load_data,
     normalize_columns,
     entropy,
     compute_entropies,
-    test_distribution_difference_all,
+    distribution_difference_all,
 )
 
 
@@ -41,13 +40,13 @@ def test_compute_entropies():
     assert all(isinstance(v, float) for v in ents.values())
 
 
-def test_test_distribution_difference_all():
+def test_distribution_difference_all_func():
     df = pd.DataFrame({
         'target': [0, 0, 1, 1],
         'num': [1.0, 2.0, 1.5, 1.8],
         'cat': ['a', 'a', 'b', 'b']
     })
-    result = test_distribution_difference_all(df, 'target', df.columns)
+    result = distribution_difference_all(df, 'target', df.columns)
     assert set(result.keys()) == {'num', 'cat'}
     for stat, pvalue in result.values():
         assert isinstance(stat, float)

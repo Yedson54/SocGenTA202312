@@ -1,7 +1,7 @@
 # Import libraries
 import glob
 import warnings
-from typing import List, Tuple, Dict
+from typing import List
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -200,7 +200,7 @@ def test_distribution_difference_categorical(data, target_variable, categorical_
     return chi2_statistic, p_value
 
 
-def test_distribution_difference_all(data: pd.DataFrame, target_variable: str, feature_variables: List[str] | pd.Index):
+def distribution_difference_all(data: pd.DataFrame, target_variable: str, feature_variables: List[str] | pd.Index):
     """
     Test the difference of distribution between two classes of a target variable for a list of feature variables.
 
